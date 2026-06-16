@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Last War Store Calculator</title>
+<style>
+:root{--bg:#0b1020;--panel:#121a2f;--panel2:#18223c;--line:#2a3554;--text:#eef3ff;--muted:#aab5d1;--gold:#f4b942;--blue:#5cc8ff;--green:#7ee787;--red:#ff7b72;--purple:#b79cff;--white:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:radial-gradient(circle at top,#17213e 0,#0b1020 45%,#070b16 100%);color:var(--text)}
+.wrap{max-width:1180px;margin:auto;padding:22px}.hero{padding:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(135deg,rgba(244,185,66,.18),rgba(92,200,255,.08));box-shadow:0 18px 40px rgba(0,0,0,.3)}
+h1{margin:0 0 8px;font-size:34px}.sub{color:var(--muted);line-height:1.45;max-width:900px}.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:16px;margin-top:16px}.card{background:rgba(18,26,47,.92);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 12px 28px rgba(0,0,0,.22)}
+h2{font-size:20px;margin:0 0 14px}.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.field{margin-bottom:12px}label{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}select,input{width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:#0e1528;color:var(--text);font-size:15px}input:focus,select:focus{outline:1px solid var(--gold)}button{border:0;border-radius:12px;padding:12px 14px;font-weight:700;cursor:pointer;background:var(--gold);color:#1b1200}button.secondary{background:#22304f;color:var(--text);border:1px solid var(--line)}
+.pills{display:flex;gap:8px;flex-wrap:wrap}.pill{padding:7px 10px;border-radius:999px;background:#0e1528;border:1px solid var(--line);color:var(--muted);font-size:13px}.pill strong{color:var(--gold)}
+.result-main{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}.metric{background:#0e1528;border:1px solid var(--line);border-radius:14px;padding:12px}.metric .k{font-size:12px;color:var(--muted)}.metric .v{font-size:23px;font-weight:800;color:var(--gold);margin-top:5px}.metric .s{font-size:12px;color:var(--muted);margin-top:3px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}table{width:100%;border-collapse:collapse;min-width:760px}th,td{padding:11px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{background:#0e1528;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.04em}tr:hover td{background:#101a31}.tag{font-size:11px;padding:3px 7px;border-radius:999px;background:#20304e;color:#cbd6f6}.tag.good{background:rgba(126,231,135,.13);color:var(--green)}.tag.rare{background:rgba(183,156,255,.14);color:var(--purple)}.tag.warn{background:rgba(244,185,66,.14);color:var(--gold)}
+.notice{padding:12px;border-radius:14px;background:#0e1528;border:1px dashed var(--line);color:var(--muted);line-height:1.45}.milestone-list{display:grid;gap:8px}.mile{display:flex;justify-content:space-between;gap:10px;background:#0e1528;border:1px solid var(--line);border-radius:12px;padding:10px}.mile.ok{border-color:rgba(126,231,135,.45)}.mile .need{color:var(--purple);font-weight:700}.ok .need{color:var(--green)}
+.footer{text-align:center;color:var(--muted);font-size:13px;margin:22px 0 6px;line-height:1.6}.footer strong{color:var(--text)}.hide{display:none}.small{font-size:12px;color:var(--muted)}
+@media(max-width:880px){.grid,.row,.row3{grid-template-columns:1fr}.result-main{grid-template-columns:1fr 1fr}.wrap{padding:14px}h1{font-size:27px}table{min-width:680px}}
+@media(max-width:520px){.result-main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <h1>Last War Store Calculator</h1>
+    <div class="sub">Mağaza seç, elindeki tuğla veya mağaza parasını gir. Araç toplam pazar parasını, milestone ödüllerini, ürün maliyetlerini ve hedef ürün için gereken miktarı hesaplar.</div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>1. Mağaza ve Bütçe</h2>
+      <div class="field">
+        <label>Mağaza</label>
+        <select id="storeSelect"></select>
+      </div>
+      <div id="storeInfo" class="pills"></div>
+      <div class="row" style="margin-top:14px">
+        <div class="field">
+          <label>Tuğla bütçesi</label>
+          <input id="bricks" type="number" min="0" value="" placeholder="Örn: 5000" />
+        </div>
+        <div class="field">
+          <label>Elindeki pazar parası</label>
+          <input id="ownedCurrency" type="number" min="0" value="0" />
+        </div>
+      </div>
+      <div class="row" id="dailyRow">
+        <div class="field">
+          <label>Ücretsiz günlük paket kaç kez alınacak?</label>
+          <input id="freeDailyCount" type="number" min="0" value="0" />
+        </div>
+        <div class="field">
+          <label>İndirimli günlük paket kaç kez alınacak?</label>
+          <input id="discountDailyCount" type="number" min="0" value="0" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Hesaplama yöntemi</label>
+        <select id="packMode">
+          <option value="smart">Tuğlayı en iyi paket oranlarına göre hesapla</option>
+          <option value="base">Sadece temel kurdan hesapla</option>
+        </select>
+      </div>
+      <button onclick="calculate()">Hesapla</button>
+      <button class="secondary" onclick="resetInputs()" style="margin-left:8px">Temizle</button>
+      <div class="notice" style="margin-top:12px">Not: Ürün listesinde “maksimum adet”, seçili ürün dışında tüm paranı o ürüne harcarsan alınabilecek adedi gösterir. Bu bir öneri değil, hızlı hesaplamadır.</div>
+    </section>
+
+    <section class="card">
+      <h2>2. Sonuç</h2>
+      <div class="result-main">
+        <div class="metric"><div class="k">Başlangıç Para</div><div class="v" id="mCurrency">0</div><div class="s" id="mCurrencyName"></div></div>
+        <div class="metric"><div class="k">Milestone Para Ödülü</div><div class="v" id="mBonusCurrency">0</div><div class="s">varsa eklenir</div></div>
+        <div class="metric"><div class="k">Efektif Para</div><div class="v" id="mEffective">0</div><div class="s">harcanabilir toplam</div></div>
+        <div class="metric"><div class="k">Kullanılan Tuğla</div><div class="v" id="mBricksUsed">0</div><div class="s">yaklaşık</div></div>
+      </div>
+      <h2 style="margin-top:18px">Milestone Ödülleri</h2>
+      <div id="milestones" class="milestone-list"></div>
+    </section>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>3. Hedef Ürün Hesabı</h2>
+      <div class="row3">
+        <div class="field"><label>Ürün</label><select id="targetItem"></select></div>
+        <div class="field"><label>Hedef adet</label><input id="targetQty" type="number" min="1" value="1" /></div>
+        <div class="field"><label>&nbsp;</label><button onclick="calculateTarget()">Hedefi Hesapla</button></div>
+      </div>
+      <div id="targetResult" class="notice">Ürün seçip hedef adet girince gereken pazar parası ve yaklaşık tuğla burada görünür.</div>
+    </section>
+
+    <section class="card">
+      <h2>4. Kullanım</h2>
+      <div class="notice">
+        İstediğiniz mağazayı seçin. Elinizdeki tuğla miktarını veya mağaza para birimini girin. Araç, satın alınabilecek ürün miktarlarını ve varsa milestone ödüllerini otomatik olarak hesaplar. Tüm hesaplamalar cihazınızda yapılır. Hiçbir veri kaydedilmez, gönderilmez veya paylaşılmaz.
+      </div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Ürün Fiyatları</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ürün</th><th>Etiket</th><th>Limit</th><th>Paket İçeriği</th><th>Fiyat</th><th>Birim Fiyat</th><th>Maks. Alınabilir</th></tr></thead>
+        <tbody id="itemsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Paketler</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Paket</th><th>Durum</th><th>Limit</th><th>Verdiği Para</th><th>Tuğla</th><th>Oran</th></tr></thead>
+        <tbody id="packsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="footer">
+    Bu sayfa veri kaydetmez. Bilgileriniz hiçbir yere gönderilmez, saklanmaz veya paylaşılmaz.<br>
+    <strong>Developed by Valar Ozy</strong><br>
+    TRSF Alliance | Server 798<br>
+    Version 1.1 | Bu araç açık kaynaklıdır. Kaynak kodunu görüntülemek için tıklayınız.
+  </div>
+</div>
+
+<script>
+const stores = {
+  glittering: {
+    name:'Glittering Market', currency:'Glittering Coins', baseRate:10, reducedRate:6.25, availability:'1 hafta / Hot Deals rotasyonu',
+    freeDaily:{name:'Daily Mega Sale Glitter Coin Pack', amount:60},
+    discountDaily:{name:'Daily Value Glitter Coin Pack', amount:80, bricks:500},
+    packs:[
+      {name:'Daily Mega Sale Glitter Coin Pack', type:'Daily', limit:'×1', amount:60, bricks:0},
+      {name:'Daily Value Glitter Coin Pack', type:'Daily', limit:'×1', amount:80, bricks:500},
+      {name:'Special Glitter Coin Pack', type:'Event', limit:'×5', amount:100, bricks:1000},
+      {name:'Premium Glitter Coin Pack', type:'Event', limit:'×5', amount:200, bricks:2000},
+      {name:'Luxury Glitter Coin Pack', type:'Event', limit:'×5', amount:500, bricks:5000},
+      {name:'Supreme Glitter Coin Pack', type:'Event', limit:'×10', amount:1000, bricks:10000}
+    ],
+    milestones:[
+      {need:100, reward:'UR Hero Universal Shard', amount:10},
+      {need:400, reward:'Decoration Chest (UR)', amount:1},
+      {need:1000, reward:'Lv 5 Drone Component Choice Chest', amount:1},
+      {need:4000, reward:'Drone Parts', amount:200},
+      {need:10000, reward:'Universal Decor Component', amount:1000}
+    ],
+    items:[
+      {name:'Hero Choice Chest', tag:'Daily Offer', limit:'Daily ×1', amount:10, price:60},
+      {name:'Dielectric Ceramic', tag:'Daily Offer', limit:'Daily ×1', amount:100, price:40},
+      {name:'Luxury Choice Chest', tag:'Daily Offer', limit:'Daily ×1', amount:1, price:100},
+      {name:'Armament Core', tag:'Event', limit:'×100', amount:10, price:40},
+      {name:'Armament Materials', tag:'Event', limit:'×200', amount:10000, price:10},
+      {name:'Gear Blueprint (MR)', tag:'Rare', limit:'×5', amount:1, price:300},
+      {name:'Skill Chip Chest (SSR)', tag:'Event', limit:'×10', amount:1, price:30},
+      {name:'Skill Chip Choice Chest (UR)', tag:'Event', limit:'×3', amount:1, price:300},
+      {name:'Skill Chip Chest (UR)', tag:'Event', limit:'×10', amount:1, price:250},
+      {name:'Upgrade Ore', tag:'Event', limit:'×100', amount:10000, price:250},
+      {name:'Gear Blueprint (UR)', tag:'Event', limit:'×50', amount:1, price:60},
+      {name:'Dielectric Ceramic', tag:'Event', limit:'×200', amount:100, price:60},
+      {name:'Valor Badge', tag:'Event', limit:'×200', amount:100, price:50},
+      {name:'1h Speed-up', tag:'Event', limit:'×200', amount:10, price:20},
+      {name:'Resource Choice Chest (UR)', tag:'Event', limit:'×500', amount:1, price:5},
+      {name:'Dual Propeller Base', tag:'Rare', limit:'×1', amount:1, price:4000},
+      {name:'Tower of Victory', tag:'Rare', limit:'×81', amount:1, price:100},
+      {name:'Enchanted Fungus Base', tag:'Resale', limit:'×1', amount:1, price:1500},
+      {name:'UR Hero Universal Shard', tag:'Event', limit:'×300', amount:1, price:10},
+      {name:'Skill Medal', tag:'Event', limit:'×100', amount:10000, price:120},
+      {name:'Silver Assault Trooper', tag:'Event', limit:'×81', amount:1, price:40}
+    ]
+  },
+  black: {
+    name:'Black Market Store', currency:'Black Market Cash', baseRate:1, reducedRate:0.625, availability:'Sezon bitiminden sonra 4 hafta',
+    freeDaily:null,
+    discountDaily:{name:'Daily Special Black Market Cash Pack', amount:800, bricks:500},
+    packs:[
+      {name:'Daily Special Black Market Cash Pack', type:'Daily', limit:'×1', amount:800, bricks:500},
+      {name:'Daily Premium Black Market Cash Pack', type:'Daily', limit:'×1', amount:1000, bricks:1000},
+      {name:'Daily Rare Black Market Cash Pack', type:'Daily', limit:'×1', amount:2000, bricks:2000},
+      {name:'Daily Luxury Black Market Cash Pack', type:'Daily', limit:'×1', amount:5000, bricks:5000},
+      {name:'Daily Supreme Black Market Cash Pack', type:'Daily', limit:'×3', amount:10000, bricks:10000}
+    ],
+    milestones:[],
+    items:[
+      {name:'Skill Chip Choice Chest (UR)', tag:'Discounted', limit:'∞', amount:1, price:3000},
+      {name:'Skill Chip Chest (UR)', tag:'Discounted', limit:'∞', amount:1, price:1500},
+      {name:'Decoration', tag:'Discounted', limit:'∞', amount:1, price:800},
+      {name:'UR Hero Universal Shard', tag:'Discounted', limit:'∞', amount:1, price:60},
+      {name:'Hero Exclusive Weapon Shard Choice Chest', tag:'Discounted', limit:'∞', amount:1, price:60},
+      {name:'Decoration Chest (UR)', tag:'Discounted', limit:'∞', amount:1, price:600},
+      {name:'Bond Badge', tag:'Discounted', limit:'∞', amount:1, price:500},
+      {name:'Armament Core', tag:'Discounted', limit:'∞', amount:5, price:150},
+      {name:'Gear Blueprint (UR)', tag:'Discounted', limit:'∞', amount:1, price:600},
+      {name:'Drone Parts', tag:'Discounted', limit:'∞', amount:20, price:400},
+      {name:'Universal Decor Component', tag:'Discounted', limit:'∞', amount:30, price:200},
+      {name:'Upgrade Ore', tag:'Discounted', limit:'∞', amount:800, price:100},
+      {name:'Skill Medal', tag:'Discounted', limit:'∞', amount:1000, price:100},
+      {name:'Dielectric Ceramic', tag:'Discounted', limit:'∞', amount:30, price:100},
+      {name:'5m Speed-up', tag:'Discounted', limit:'∞', amount:12, price:10},
+      {name:'Overlord Skill Badge', tag:'Discounted', limit:'∞', amount:2000, price:100},
+      {name:'Training Certificate', tag:'Discounted', limit:'∞', amount:5, price:100},
+      {name:'10k Profession EXP', tag:'Discounted', limit:'∞', amount:5, price:250},
+      {name:'Gear Blueprint (UR)', tag:'Normal', limit:'∞', amount:5, price:4000},
+      {name:'Gorilla Overlord Shard', tag:'Normal', limit:'∞', amount:5, price:400},
+      {name:'Hero Exclusive Weapon Shard Choice Chest', tag:'Normal', limit:'∞', amount:5, price:500},
+      {name:'Skill Chip Choice Chest (UR)', tag:'Normal', limit:'∞', amount:1, price:4000},
+      {name:'Skill Chip Chest (UR)', tag:'Normal', limit:'∞', amount:1, price:3000},
+      {name:'Armament Core', tag:'Normal', limit:'∞', amount:5, price:300},
+      {name:'Valor Badge', tag:'Normal', limit:'∞', amount:50, price:500},
+      {name:'Decoration Chest (UR)', tag:'Normal', limit:'∞', amount:1, price:1000},
+      {name:'Drone Parts', tag:'Normal', limit:'∞', amount:15, price:500},
+      {name:'Universal Decor Component', tag:'Normal', limit:'∞', amount:50, price:500},
+      {name:'Resource Choice Chest (UR)', tag:'Normal', limit:'∞', amount:6, price:500},
+      {name:'1h Speed-up', tag:'Normal', limit:'∞', amount:30, price:800},
+      {name:'Upgrade Ore', tag:'Normal', limit:'∞', amount:1000, price:300},
+      {name:'Skill Medal', tag:'Normal', limit:'∞', amount:1000, price:200},
+      {name:'Overlord Skill Badge', tag:'Normal', limit:'∞', amount:2000, price:200},
+      {name:'Dielectric Ceramic', tag:'Normal', limit:'∞', amount:60, price:400},
+      {name:'10k Profession EXP', tag:'Normal', limit:'∞', amount:10, price:1000}
+    ]
+  },
+  mobilization: {
+    name:'Total Mobilization', currency:'Mobilization Coupons', baseRate:50, reducedRate:null, availability:'1 hafta / Hot Deals rotasyonu',
+    freeDaily:null, discountDaily:null,
+    packs:[
+      {name:'Battle Prep Special Pack', type:'Event', limit:'×5', amount:10, bricks:500},
+      {name:'Battle Prep Premium Pack', type:'Event', limit:'×5', amount:20, bricks:1000},
+      {name:'Battle Prep Rare Pack', type:'Event', limit:'×5', amount:40, bricks:2000},
+      {name:'Battle Prep Deluxe Pack', type:'Event', limit:'×5', amount:100, bricks:5000},
+      {name:'Battle Prep Supreme Pack', type:'Event', limit:'×7', amount:200, bricks:10000}
+    ],
+    milestones:[
+      {need:20, reward:'Mobilization Coupons', amount:20, currencyReward:true},
+      {need:80, reward:'Mobilization Coupons', amount:40, currencyReward:true},
+      {need:200, reward:'Mobilization Coupons', amount:100, currencyReward:true},
+      {need:600, reward:'Gear Blueprint (MR)', amount:5},
+      {need:1000, reward:'Mobilization Coupons', amount:300, currencyReward:true}
+    ],
+    items:[
+      {name:'UR Hero Universal Shard', tag:'Daily Value', limit:'Daily ×1', amount:10, price:10},
+      {name:'Hero Exclusive Weapon Shard Choice Chest', tag:'Resale', limit:'×400', amount:1, price:2},
+      {name:'Hero Choice Chest', tag:'Resale', limit:'×400', amount:1, price:2},
+      {name:'Gorilla Overlord Shard', tag:'Resale', limit:'×300', amount:1, price:2},
+      {name:'Overlord Skill Badge', tag:'Event', limit:'×400', amount:150, price:1},
+      {name:'Lv 5 Drone Component Chest', tag:'Event', limit:'×50', amount:1, price:30},
+      {name:'Hero EXP Chest (UR)', tag:'Event', limit:'×100', amount:1, price:3},
+      {name:'Survivor Recruitment Ticket', tag:'Event', limit:'×50', amount:10, price:8},
+      {name:'Gear Blueprint (UR)', tag:'Event', limit:'×20', amount:1, price:12},
+      {name:'Premium Chip Material', tag:'Event', limit:'×80', amount:100, price:7},
+      {name:'Upgrade Ore', tag:'Event', limit:'×1000', amount:120, price:1},
+      {name:'Skill Medal', tag:'Event', limit:'×1000', amount:150, price:1},
+      {name:'Resource Choice Chest (SSR)', tag:'Event', limit:'×4000', amount:1, price:1}
+    ]
+  }
+};
+let current = null;
+let last = {currency:0, effective:0, usedBricks:0, bonusCurrency:0};
+function fmt(n){ if(!isFinite(n)) return '0'; return Math.floor(n).toLocaleString('en-US'); }
+function fmtDec(n){ if(!isFinite(n)) return '0'; return Number(n.toFixed(3)).toLocaleString('en-US'); }
+function init(){
+  const s=document.getElementById('storeSelect');
+  Object.entries(stores).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v.name;s.appendChild(o)});
+  s.addEventListener('change', loadStore); loadStore();
+}
+function loadStore(){
+  current=stores[document.getElementById('storeSelect').value];
+  document.getElementById('mCurrencyName').textContent=current.currency;
+  document.getElementById('storeInfo').innerHTML=`<span class="pill">Para: <strong>${current.currency}</strong></span><span class="pill">Kur: <strong>1 = ${current.baseRate} tuğla</strong></span>${current.reducedRate?`<span class="pill">İndirimli: <strong>1 = ${current.reducedRate} tuğla</strong></span>`:''}<span class="pill">Süre: <strong>${current.availability}</strong></span>`;
+  document.getElementById('freeDailyCount').disabled=!current.freeDaily;
+  document.getElementById('discountDailyCount').disabled=!current.discountDaily;
+  document.getElementById('freeDailyCount').value=0; document.getElementById('discountDailyCount').value=0;
+  fillTargetItems(); renderPacks(); calculate();
+}
+function getCurrencyFromBricks(bricks){
+  const mode=document.getElementById('packMode').value;
+  let currency=0, used=0;
+  let remaining=Number(bricks)||0;
+  let freeCount=Number(document.getElementById('freeDailyCount').value)||0;
+  let discCount=Number(document.getElementById('discountDailyCount').value)||0;
+  if(current.freeDaily) currency += freeCount * current.freeDaily.amount;
+  if(current.discountDaily){
+    const canBuy=Math.min(discCount, Math.floor(remaining/current.discountDaily.bricks));
+    currency += canBuy * current.discountDaily.amount; used += canBuy * current.discountDaily.bricks; remaining -= canBuy * current.discountDaily.bricks;
+  }
+  if(mode==='base') { currency += Math.floor(remaining / current.baseRate); used += remaining - (remaining % current.baseRate); return {currency, used}; }
+  const paidPacks = current.packs.filter(p=>p.bricks>0 && (!current.discountDaily || p.name!==current.discountDaily.name)).map(p=>({...p, ratio:p.bricks/p.amount})).sort((a,b)=>a.ratio-b.ratio || b.amount-a.amount);
+  for(const p of paidPacks){
+    let lim=9999; const m=String(p.limit||'').match(/×(\d+)/); if(m) lim=Number(m[1]);
+    const buy=Math.min(lim, Math.floor(remaining/p.bricks));
+    if(buy>0){currency += buy*p.amount; used += buy*p.bricks; remaining -= buy*p.bricks;}
+  }
+  currency += Math.floor(remaining / current.baseRate); used += remaining - (remaining % current.baseRate);
+  return {currency, used};
+}
+function computeMilestones(spendable){
+  let rewards=[], bonusCurrency=0;
+  for(const m of current.milestones){
+    const ok=spendable>=m.need;
+    rewards.push({...m, ok});
+    if(ok && m.currencyReward) bonusCurrency += m.amount;
+  }
+  return {rewards, bonusCurrency};
+}
+function calculate(){
+  const bricks=Number(document.getElementById('bricks').value)||0;
+  const owned=Number(document.getElementById('ownedCurrency').value)||0;
+  const conv=getCurrencyFromBricks(bricks);
+  const currency=owned + conv.currency;
+  const ms=computeMilestones(currency);
+  const effective=currency + ms.bonusCurrency;
+  last={currency, effective, usedBricks:conv.used, bonusCurrency:ms.bonusCurrency};
+  document.getElementById('mCurrency').textContent=fmt(currency);
+  document.getElementById('mBonusCurrency').textContent=fmt(ms.bonusCurrency);
+  document.getElementById('mEffective').textContent=fmt(effective);
+  document.getElementById('mBricksUsed').textContent=fmt(conv.used);
+  renderMilestones(ms.rewards); renderItems(); calculateTarget(false);
+}
+function renderMilestones(rewards){
+  const box=document.getElementById('milestones');
+  if(!rewards.length){box.innerHTML='<div class="notice">Bu mağazada milestone ödülü yok.</div>'; return;}
+  box.innerHTML=rewards.map(m=>`<div class="mile ${m.ok?'ok':''}"><div>${m.ok?'✓':'○'} ${fmt(m.amount)} ${m.reward}</div><div class="need">${fmt(m.need)} ${current.currency}</div></div>`).join('');
+}
+function tagClass(t){t=String(t).toLowerCase(); if(t.includes('discount')||t.includes('value'))return 'good'; if(t.includes('rare'))return 'rare'; if(t.includes('daily'))return 'warn'; return ''}
+function renderItems(){
+  const body=document.getElementById('itemsBody');
+  body.innerHTML=current.items.map(it=>{
+    const max=Math.floor(last.effective/it.price)*it.amount;
+    const unit=it.price/it.amount;
+    return `<tr><td>${it.name}</td><td><span class="tag ${tagClass(it.tag)}">${it.tag}</span></td><td>${it.limit}</td><td>${fmt(it.amount)}</td><td>${fmtDec(it.price)} ${current.currency}</td><td>${fmtDec(unit)} / item</td><td>${fmt(max)}</td></tr>`;
+  }).join('');
+}
+function renderPacks(){
+  const body=document.getElementById('packsBody');
+  body.innerHTML=current.packs.map(p=>`<tr><td>${p.name}</td><td>${p.type}</td><td>${p.limit}</td><td>${fmt(p.amount)} ${current.currency}</td><td>${p.bricks===0?'Free':fmt(p.bricks)}</td><td>${p.bricks===0?'Free':fmtDec(p.bricks/p.amount)+' tuğla / 1'}</td></tr>`).join('');
+}
+function fillTargetItems(){
+  const sel=document.getElementById('targetItem'); sel.innerHTML='';
+  current.items.forEach((it,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${it.name} - ${it.price} ${current.currency}`;sel.appendChild(o)});
+}
+function calculateTarget(show=true){
+  if(!current) return;
+  const idx=Number(document.getElementById('targetItem').value)||0;
+  const qty=Number(document.getElementById('targetQty').value)||1;
+  const it=current.items[idx]; if(!it) return;
+  const packsNeeded=Math.ceil(qty / it.amount);
+  const needCurrency=packsNeeded * it.price;
+  const approxBricksBase=needCurrency * current.baseRate;
+  const approxBricksReduced=current.reducedRate? needCurrency * current.reducedRate : null;
+  const affordable=last.effective>=needCurrency;
+  document.getElementById('targetResult').innerHTML=`
+    <strong>${qty.toLocaleString('en-US')} adet ${it.name}</strong> için ${fmt(packsNeeded)} paket gerekir.<br>
+    Gerekli pazar parası: <strong>${fmt(needCurrency)} ${current.currency}</strong><br>
+    Yaklaşık tuğla: <strong>${fmt(approxBricksBase)}</strong>${approxBricksReduced!==null?` / indirimli kurla <strong>${fmt(approxBricksReduced)}</strong>`:''}<br>
+    Mevcut efektif paranla durum: <strong style="color:${affordable?'var(--green)':'var(--red)'}">${affordable?'Yeterli':'Yetersiz'}</strong>
+  `;
+}
+function resetInputs(){document.getElementById('bricks').value='';document.getElementById('ownedCurrency').value=0;document.getElementById('freeDailyCount').value=0;document.getElementById('discountDailyCount').value=0;calculate();}
+init();
+</script>
+</body>
+</html>
